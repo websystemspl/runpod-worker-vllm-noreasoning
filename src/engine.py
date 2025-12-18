@@ -214,6 +214,8 @@ class OpenAIvLLMEngine(vLLMEngine):
             lora_modules=self.lora_adapters,
         )
         await self.serving_models.init_static_loras()
+        if os.getenv("ENABLE_REASONING") or os.getenv("REASONING_PARSER"):
+            logging.warning("Reasoning support is disabled in this worker build. Ignoring ENABLE_REASONING/REASONING_PARSER environment settings.")
         
         # Get chat template from vLLM tokenizer if available
         chat_template = None
@@ -228,8 +230,8 @@ class OpenAIvLLMEngine(vLLMEngine):
             request_logger=None,
             chat_template=chat_template,
             chat_template_content_format="auto",
-            # enable_reasoning=os.getenv('ENABLE_REASONING', 'false').lower() == 'true',
-            reasoning_parser= os.getenv('REASONING_PARSER', "") or None,
+            enable_reasoning=False,
+            reasoning_parser=None,
             # return_token_as_token_ids=False,
             enable_auto_tools=os.getenv('ENABLE_AUTO_TOOL_CHOICE', 'false').lower() == 'true',
             tool_parser=os.getenv('TOOL_CALL_PARSER', "") or None,
@@ -266,7 +268,7 @@ class OpenAIvLLMEngine(vLLMEngine):
         
         try:
             request = request_class(
-                **openai_request.openai_input
+                **self._strip_reasoning_fields(openai_request.openai_input or {})
             )
         except Exception as e:
             yield create_error_response(str(e)).model_dump()
@@ -303,4 +305,16 @@ class OpenAIvLLMEngine(vLLMEngine):
                 if self.raw_openai_output:
                     batch = "".join(batch)
                 yield batch
+
+    def _strip_reasoning_fields(self, openai_input: dict) -> dict:
+        """Remove client-supplied reasoning controls so the worker never enables them."""
+        sanitized = dict(openai_input)
+        removed = []
+        for key in list(sanitized.keys()):
+            if key.startswith("reasoning"):
+                removed.append(key)
+                sanitized.pop(key, None)
+        if removed:
+            logging.warning("Reasoning parameters %s were provided but are not allowed; they were removed.", removed)
+        return sanitized
             

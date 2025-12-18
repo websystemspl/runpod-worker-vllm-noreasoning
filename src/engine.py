@@ -24,9 +24,10 @@ class vLLMEngine:
     def __init__(self, engine = None):
         load_dotenv() # For local development
         self.engine_args = get_engine_args()
-        logging.info(f"Engine args: {self.engine_args}")
+        logging.info("vLLMEngine init: loaded engine args: %s", self.engine_args)
         
         # Initialize vLLM engine first
+        logging.info("vLLMEngine init: creating AsyncLLMEngine")
         self.llm = self._initialize_llm() if engine is None else engine.llm
         
         # Only create custom tokenizer wrapper if not using mistral tokenizer mode
@@ -202,7 +203,9 @@ class OpenAIvLLMEngine(vLLMEngine):
         return adapters
 
     async def _initialize_engines(self):
+        logging.info("OpenAIvLLMEngine: fetching model config from engine")
         self.model_config = await self.llm.get_model_config()
+        logging.info("OpenAIvLLMEngine: model config received")
         self.base_model_paths = [
             BaseModelPath(name=self.engine_args.model, model_path=self.engine_args.model)
         ]
@@ -244,6 +247,7 @@ class OpenAIvLLMEngine(vLLMEngine):
             request_logger=None,
             # return_token_as_token_ids=False,
         )
+        logging.info("OpenAIvLLMEngine: chat and completion engines initialized")
     
     async def generate(self, openai_request: JobInput):
         if openai_request.openai_route == "/v1/models":
@@ -305,4 +309,3 @@ class OpenAIvLLMEngine(vLLMEngine):
                 if self.raw_openai_output:
                     batch = "".join(batch)
                 yield batch
-            

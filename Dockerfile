@@ -11,7 +11,7 @@ COPY builder/requirements.txt /requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m pip install --no-cache-dir --upgrade pip && \
     python3 -m pip install --no-cache-dir --upgrade -r /requirements.txt && \
-    rm -rf /root/.cache/pip
+    rm -rf /root/.cache/pip/* || true
 
 # Install vLLM (switching back to pip installs since issues that required building fork are fixed and space optimization is not as important since caching) and FlashInfer 
 RUN python3 -m pip install --no-cache-dir vllm==0.11.0 && \

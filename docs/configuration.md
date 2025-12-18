@@ -114,7 +114,9 @@ The way this works is that the first request will have a batch size of `DEFAULT_
 | `OPENAI_RESPONSE_ROLE`              | `assistant` | `str`            | Role of the LLM's Response in OpenAI Chat Completions.                                                                                                                                                            |
 | `ENABLE_AUTO_TOOL_CHOICE`           | `false`     | `bool`           | Enables automatic tool selection for supported models. Set to `true` to activate.                                                                                                                                 |
 | `TOOL_CALL_PARSER`                  | `None`      | `str`            | Specifies the parser for tool calls. Options: `mistral`, `hermes`, `llama3_json`, `llama4_json`, `llama4_pythonic`, `granite`, `granite-20b-fc`, `deepseek_v3`, `internlm`, `jamba`, `phi4_mini_json`, `pythonic` |
-| `REASONING_PARSER`                  | `None`      | `str`            | Ignored in this fork: reasoning is forced off server-side to prevent reasoning traces in responses, even if this variable is set.                                                                                |
+| `REASONING_PARSER`                  | `None`      | `str`            | Parser for reasoning-capable models (enables reasoning mode). Examples: `deepseek_r1`, `qwen3`, `granite`, `hunyuan_a13b`. Leave unset to disable.                                                                |
+
+> Note: This worker build hard-disables reasoning support. `ENABLE_REASONING` and `REASONING_PARSER` environment variables are ignored to keep responses in standard chat/completions mode.
 
 ## Serverless & Concurrency Settings
 
